@@ -63,7 +63,7 @@ rec {
     #   org.gradle.daemon.idletimeout=3600000
     # '';
     ".config/scripts/lock.sh" = {
-      enable = false;
+      enable = true;
       source = config/scripts/lock.sh;
       executable = true;
     };
@@ -77,7 +77,7 @@ rec {
   services = {
     swayidle = {
       # Can not enable before converting swayNC and swaylock
-      enable = false;
+      enable = true;
       events = [
         {
           event = "before-sleep";
@@ -89,6 +89,7 @@ rec {
         }
       ];
       systemdTarget = "graphical.target";
+      extraArgs = ["-C" "/dev/null"];
     };
   };
   
