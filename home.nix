@@ -1,5 +1,5 @@
 { config, pkgs, ... }:
-{
+rec {
 
   nixpkgs = {
     config = {
@@ -9,7 +9,7 @@
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
   home.username = "hweissi";
-  home.homeDirectory = "/home/hweissi";
+  home.homeDirectory = "/home/${home.username}";
 
   # This value determines the Home Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Home Manager release
@@ -20,36 +20,43 @@
   # release notes.
   home.stateVersion = "23.11"; # Please read the comment before changing.
 
+  gtk = {
+    enable = true;
+    theme = {
+      name = "Orchis-Purple-Dark";
+      package = pkgs.orchis-theme;
+    };
+    cursorTheme = {
+      package = with pkgs; callPackage ./packages/posy-cursor {};
+    # TODO: make package
+      name = "Posy_Cursor";
+      size = 24;
+    };
+    iconTheme = {
+      package = pkgs.gnome.adwaita-icon-theme;
+      name = "Adwaita";
+    };
+    font = {
+      name = "Cantarell";
+      size = 11;
+      package = pkgs.cantarell-fonts;
+    };
+    gtk2.extraConfig = ''
+    include "/home/${home.username}/.gtkrc-2.0.mine"
+    '';
+  };
+
   # The home.packages option allows you to install Nix packages into your
   # environment.
   home.packages = [
-    # # Adds the 'hello' command to your environment. It prints a friendly
-    # # "Hello, world!" when run.
-    # pkgs.hello
-
-    # # It is sometimes useful to fine-tune packages, for example, by applying
-    # # overrides. You can do that directly here, just don't forget the
-    # # parentheses. Maybe you want to install Nerd Fonts with a limited number of
-    # # fonts?
-    # (pkgs.nerdfonts.override { fonts = [ "FantasqueSansMono" ]; })
-
-    # # You can also create simple shell scripts directly inside your
-    # # configuration. For example, this adds a command 'my-hello' to your
-    # # environment:
-    # (pkgs.writeShellScriptBin "my-hello" ''
-    #   echo "Hello, ${config.home.username}!"
-    # '')
+    pkgs.thefuck
+    pkgs.nixd
   ];
-
+  
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
   # plain files is through 'home.file'.
   home.file = {
     ".p10k.zsh".source = config/zsh/.p10k.zsh;
-    # # Building this configuration will create a copy of 'dotfiles/screenrc' in
-    # # the Nix store. Activating the configuration will then make '~/.screenrc' a
-    # # symlink to the Nix store copy.
-    # ".screenrc".source = dotfiles/screenrc;
-
     # # You can also set the file content immediately.
     # ".gradle/gradle.properties".text = ''
     #   org.gradle.console=verbose
@@ -74,8 +81,9 @@
   #
   home.sessionVariables = {
     # EDITOR = "emacs";
+    WORKON_HOME = "~/.virtualenvs";
   };
-
+  
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
   # programs.zsh.ohMyZsh.customPkgs = [ pkgs.zsh-powerlevel10k ];
@@ -119,7 +127,8 @@
 # function gi() { curl -sLw n https://www.toptal.com/developers/gitignore/api/$@ ;}'';
 #     };
 #   };
-  
+
+
   programs.zsh = {
     enable = true;
     syntaxHighlighting.enable = true;
@@ -173,7 +182,6 @@
     }
     function gi() { curl -sLw n https://www.toptal.com/developers/gitignore/api/$@ ;}
 
-    export WORKON_HOME=~/.virtualenvs
     source /usr/bin/virtualenvwrapper.sh
 
     source ~/.p10k.zsh
@@ -303,12 +311,46 @@
         "grammarly.config.suggestionCategories.ConjunctionAtStartOfSentence" = true;
         "grammarly.config.suggestionCategories.InformalPronounsAcademic" = true;
         "grammarly.config.suggestionCategories.OxfordComma" = true;
-        "python.defaultInterpreterPath" = "/home/hweissi/.virtualenvs/ctf";
+        "python.defaultInterpreterPath" = "/home/${home.username}/.virtualenvs/ctf";
         "window.zoomLevel" = 2;
         "nix.enableLanguageServer" = true;
+        "nix.serverPath" = "nixd";
+        "nix.serverSettings" = {
+          "nixd" = {
+            "eval" = {
+              "target" = {
+                # Accept args as "nix eval"
+                "args" = [];
+                # "nix eval"
+                "installable" = "";
+              };
+              # Extra depth for evaluation
+              "depth" = 0;
+              # The number of workers for evaluation task.
+              "workers" = 3;
+            };
+            #"formatting" = {
+              # Which command you would like to do formatting
+              # "command" = "nixpkgs-fmt";
+            #};
+            "options" = {
+              # Disable it if you are not writting modules.
+              "enable" = true;
+              "target" = {
+                "args" = [];
+                # Example of NixOS options.
+                "installable" = "<flakeref>#homeConfigurations.<name>.options";
+              };
+            };
+          };
+        };
+
     };
     
   };
-
+  manual = {
+    json.enable = true;
+    html.enable = true;
+  };
   targets.genericLinux.enable = true;
 }
